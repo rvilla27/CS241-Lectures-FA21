@@ -87,6 +87,12 @@ In which our intrepid hero battles standard out, standard error, file descriptor
 
 ### Hello, World! (system call style)
 1. Write a program that uses `write()` to print out "Hi! My name is `<Your Name>`".
+```C
+int main() {
+	write(1, "Hi! My name is Robert Villa", 27);
+	return 0;
+}
+```
 ### Hello, Standard Error Stream!
 2. Write a function to print out a triangle of height `n` to standard error.
    - Your function should have the signature `void write_triangle(int n)` and should use `write()`.
@@ -96,23 +102,87 @@ In which our intrepid hero battles standard out, standard error, file descriptor
    **
    ***
    ```
+   
+```C  
+void write_triangle(int n);
+
+int main() {
+	write_triangle(3);
+	return 0;
+}
+
+void write_triangle(int n) {
+	int i = 0;
+	int j = 0;
+	for (i = 1; i <= n; i++) {
+		for (j = 0; j < i; j++) {
+			write(2, "*", 1);
+		}
+		write(2, "\n", 1);
+	}
+}
+```
+
 ### Writing to files
 3. Take your program from "Hello, World!" modify it write to a file called `hello_world.txt`.
    - Make sure to to use correct flags and a correct mode for `open()` (`man 2 open` is your friend).
+
+```C  
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+int main() {
+	mode_t mode = S_IRUSR |  S_IWUSR;
+	int fildes = open("hello_world.txt", O_CREAT | O_TRUNC | O_RDWR ,mode);
+	write(fildes, "Hi! My name is Robert Villa", 27);
+	close(fildes);
+	return 0;
+}
+```
+
+
 ### Not everything is a system call
 4. Take your program from "Writing to files" and replace `write()` with `printf()`.
    - Make sure to print to the file instead of standard out!
-5. What are some differences between `write()` and `printf()`?
+```C  
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
+int main() {
+	close(1);
+	mode_t mode = S_IRUSR |  S_IWUSR;
+	int fildes = open("hello_world.txt", O_CREAT | O_TRUNC | O_RDWR ,mode);
+	printf("Hi! My name is Robert Villa\n");
+	close(fildes);
+	return 0;
+}
+```
+
+5. What are some differences between `write()` and `printf()`?
+```C  
+printf() is a function from the standard c library that can be used to stdout. write() is a systme that can be used to write to a file, stdout, or stderr. printf() uses write(). printf() also has a buffer.  
+```
 ## Chapter 2
 
 Sizing up C types and their limits, `int` and `char` arrays, and incrementing pointers
 
 ### Not all bytes are 8 bits?
 1. How many bits are there in a byte?
+```C  
+There are at least 8 bits in a byte
+```
 2. How many bytes are there in a `char`?
+```C  
+There is 1 byte in a char on every machine
+```
 3. How many bytes the following are on your machine?
-   - `int`, `double`, `float`, `long`, and `long long`
+   - `int` 4, `double` 8, `float` 4, `long` 4, and `long long` 8
 ### Follow the int pointer
 4. On a machine with 8 byte integers:
 ```C
@@ -122,8 +192,16 @@ int main(){
 ```
 If the address of data is `0x7fbd9d40`, then what is the address of `data+2`?
 
+```C  
+0x7fbd9d50
+```
+
 5. What is `data[3]` equivalent to in C?
    - Hint: what does C convert `data[3]` to before dereferencing the address?
+
+```C  
+3[data] or *(data + 3)
+```
 
 ### `sizeof` character arrays, incrementing pointers
   
@@ -134,10 +212,25 @@ Remember, the type of a string constant `"abc"` is an array.
 char *ptr = "hello";
 *ptr = 'J';
 ```
+hello is a string constant stored in read only memory and ptr points to that address in memory, so when trying to write to this memory there will be be a segmentation fault. This is because a copy of the string outside of this read only memory is not made like with a char array.
+
+
 7. What does `sizeof("Hello\0World")` return?
+```C  
+12
+```
 8. What does `strlen("Hello\0World")` return?
+```C  
+5
+```
 9. Give an example of X such that `sizeof(X)` is 3.
+```C  
+sizeof("hi");
+```
 10. Give an example of Y such that `sizeof(Y)` might be 4 or 8 depending on the machine.
+```C  
+sizeof(int);
+```
 
 ## Chapter 3
 
