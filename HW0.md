@@ -238,9 +238,18 @@ Program arguments, environment variables, and working with character arrays (str
 
 ### Program arguments, `argc`, `argv`
 1. What are two ways to find the length of `argv`?
+```C  
+use the value in argc or iterate through argv and count the number of entries until the null string is reached
+```
 2. What does `argv[0]` represent?
+```C  
+The executtion name of the program
+```
 ### Environment Variables
 3. Where are the pointers to environment variables stored (on the stack, the heap, somewhere else)?
+```C  
+You have to use environ to access environment variables because there are stored somewhere else
+```
 ### String searching (strings are just char arrays)
 4. On a machine where pointers are 8 bytes, and with the following code:
 ```C
@@ -248,10 +257,16 @@ char *ptr = "Hello";
 char array[] = "Hello";
 ```
 What are the values of `sizeof(ptr)` and `sizeof(array)`? Why?
+```C  
+sizeof(ptr) will equal 8 because it is getting the size of a pointer and pointers are said to be 8 bytes on this machine. sizeof(array) will equal 6 because the array holds a copy of the string. This means it holds space for the 5 characters in "hello" and the null character, totaling 6 bytes.
+```
 
 ### Lifetime of automatic variables
 
 5. What data structure manages the lifetime of automatic variables?
+```C  
+The stack manages the lifetime of these variables
+```
 
 ## Chapter 4
 
@@ -259,26 +274,77 @@ Heap and stack memory, and working with structs
 
 ### Memory allocation using `malloc`, the heap, and time
 1. If I want to use data after the lifetime of the function it was created in ends, where should I put it? How do I put it there?
+```C  
+You should put it in heap memory by allocating memory on the heap, you can do this by calling malloc
+```
 2. What are the differences between heap and stack memory?
+```C  
+Memory on the stack is freed after a function is completed. Memory on the heap needs to be manually freed or else it will last the lifetime of the program. Because of this, it can be used after the lifetime of a function.
+```
 3. Are there other kinds of memory in a process?
+```C  
+Memory is used for things such as read only string literals and instructions that the system uses.
+```
 4. Fill in the blank: "In a good C program, for every malloc, there is a ___".
+```C  
+a free called for the memory allocated
+```
 ### Heap allocation gotchas
 5. What is one reason `malloc` can fail?
+```C  
+malloc can fail if there is not enough free heap memory to allocate.
+```
 6. What are some differences between `time()` and `ctime()`?
+```C  
+time() returns the number of seconds since 1970 as a time_t. ctime() takes a pointer to a time_t and returns a char pointer that formats the time in a more readable format.
+```
 7. What is wrong with this code snippet?
 ```C
 free(ptr);
 free(ptr);
+```
+```C  
+This is a double free eror. By freeing memory that has already been freed it could delete data or instructions that the system needs.
 ```
 8. What is wrong with this code snippet?
 ```C
 free(ptr);
 printf("%s\n", ptr);
 ```
+```C  
+Accessing memory that has been freed will have unintended consequences because the you no longer have control what the dangling pointer is pointing to.
+```
 9. How can one avoid the previous two mistakes? 
+```C  
+You can avoiding these mistakes by assigning a pointer to null directly after the memory is freed.
+```
 ### `struct`, `typedef`s, and a linked list
 10. Create a `struct` that represents a `Person`. Then make a `typedef`, so that `struct Person` can be replaced with a single word. A person should contain the following information: their name (a string), their age (an integer), and a list of their friends (stored as a pointer to an array of pointers to `Person`s).
 11. Now, make two persons on the heap, "Agent Smith" and "Sonny Moore", who are 128 and 256 years old respectively and are friends with each other.
+```C  
+// Questions 10 and 11 
+#include <stdio.h>
+
+struct Person {
+	char* name;
+	int age;
+	struct Person** friends;
+};
+typedef struct Person pers;
+
+int main() {
+	pers* p1 = (pers*)malloc(sizeof(pers)); 
+	pers* p2 = (pers*)malloc(sizeof(pers)); 
+	p1->name = "Agent Smith";
+	p2->name = "Sonny Moore";
+	p1->age = 128;
+	p2->age = 256;
+	p1->friends = malloc(sizeof(pers));
+	*(p1->friends) = p2;
+	p2->friends = malloc(sizeof(pers));
+	*(p2->friends) = p1;
+}
+```
 ### Duplicating strings, memory allocation and deallocation of structures
 Create functions to create and destroy a Person (Person's and their names should live on the heap).
 12. `create()` should take a name and age. The name should be copied onto the heap. Use malloc to reserve sufficient memory for everyone having up to ten friends. Be sure initialize all fields (why?).
