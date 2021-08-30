@@ -343,12 +343,52 @@ int main() {
 	*(p1->friends) = p2;
 	p2->friends = malloc(sizeof(pers));
 	*(p2->friends) = p1;
+	return 0;
 }
 ```
 ### Duplicating strings, memory allocation and deallocation of structures
 Create functions to create and destroy a Person (Person's and their names should live on the heap).
 12. `create()` should take a name and age. The name should be copied onto the heap. Use malloc to reserve sufficient memory for everyone having up to ten friends. Be sure initialize all fields (why?).
 13. `destroy()` should free up not only the memory of the person struct, but also free all of its attributes that are stored on the heap. Destroying one person should not destroy any others.
+```C
+// Questions 12 and 13 
+#include <stdio.h>
+
+struct Person {
+	char* name;
+	int age;
+	struct Person** friends;
+};
+typedef struct Person pers;
+
+pers* create(char* name, int age) {
+	char* cname = strdup(name);
+	pers* p = malloc(sizeof(pers));
+	p->name = cname;
+	p->age = age;
+	p->friends = malloc(sizeof(pers*)*10);
+	int i = 0;
+	// important to initialize all friends to 0 / NULL because you dont know
+	// what memory is currently in this location
+	for (i = 0; i < 10; i++) {
+		p->friends[i] = 0;
+	}
+	return p;
+}
+
+void destroy(pers* p) {
+	free(p->friends);
+	free(p->name);
+	free(p);
+	p = 0;
+}
+
+int main() {
+	return 0;
+}
+```
+
+
 
 ## Chapter 5 
 
@@ -356,25 +396,87 @@ Text input and output and parsing using `getchar`, `gets`, and `getline`.
 
 ### Reading characters, trouble with gets
 1. What functions can be used for getting characters from `stdin` and writing them to `stdout`?
+```C
+You can get a char from stdin with getchar() and write it to stdout with putchar()
+```
 2. Name one issue with `gets()`.
+```C
+If the buffer passed to char is not big enough, gets() will change memory outside the buffer and could corrupt other variables. There is no way to tell gets() that it should not accept inputs that are too long.
+```
 ### Introducing `sscanf` and friends
 3. Write code that parses the string "Hello 5 World" and initializes 3 variables to "Hello", 5, and "World".
+```C
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+int main() {
+	char* data = "Hello 5 World";
+	char s1[6];
+	int num;
+	char s2[6];
+	sscanf(data, "%s %d %s", s1, &num, s2);
+	return 0;
+} 
+```
 ### `getline` is useful
 4. What does one need to define before including `getline()`?
-5. Write a C program to print out the content of a file line-by-line using `getline()`.
+```C
+You need to define _GNU_SOURCE. Need to initialize a character pointer buffer and a size_t capacity before getline() as well.
+```
+6. Write a C program to print out the content of a file line-by-line using `getline()`.
+```C
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
 
+int main() {
+	char* buffer = 0;
+	size_t capacity = 0;
+	getline(&buffer, &capacity, stdin);
+	printf("%s\n", buffer);
+	free(buffer);
+	buffer = 0;
+	return 0;
+}
+```
 ## C Development
 
 These are general tips for compiling and developing using a compiler and git. Some web searches will be useful here
 
 1. What compiler flag is used to generate a debug build?
+```C
+-g
+```
 2. You modify the Makefile to generate debug builds and type `make` again. Explain why this is insufficient to generate a new build.
+```C
+make will keep the build in the debug mode instead of creating an entirely new build
+```
 3. Are tabs or spaces used to indent the commands after the rule in a Makefile?
+```C
+tabs
+```
 4. What does `git commit` do? What's a `sha` in the context of git?
+```C
+git commit saves the current state of the project and can be thought of a safe way of saving. sha is a hashing that can be used to identify a commit.
+```
 5. What does `git log` show you?
+```C
+It shows a list of all the commits and their sha made to a repository.
+```
 6. What does `git status` tell you and how would the contents of `.gitignore` change its output?
+```C
+git status shows the state of the local directory and shows all the files that have been changed. .gitignore specifies what files not to track. a file included in .gitignore will not show up in git status.
+```
 7. What does `git push` do? Why is it not just sufficient to commit with `git commit -m 'fixed all bugs' `?
+```C
+git push updates will updates the remote repository with the latest commit
+```
 8. What does a non-fast-forward error `git push` reject mean? What is the most common way of dealing with this?
+```C
+This reject can happen when a git commit is lost or when someone else pushes to the same branch. The best way to resolve this is to fetch and merge the conflict locally.
+```
 
 ## Optional (Just for fun)
 - Convert your a song lyrics into System Programming and C code and share on Ed.
